@@ -1,0 +1,69 @@
+import { useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { Menu, Rocket } from 'lucide-react';
+import WalletButton from '@/components/wallet/WalletButton';
+
+const links = [
+  ['Home', '/'],
+  ['Donate', '/donate'],
+  ['Activity', '/activity'],
+  ['About', '/about'],
+];
+
+export default function Navbar({ wallet }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <header className="fixed left-0 right-0 top-0 z-40 border-b border-[rgba(0,229,255,0.12)] bg-[rgba(2,4,8,0.72)] backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(0,229,255,0.24)] bg-[rgba(0,229,255,0.08)] text-[var(--accent-cyan)] shadow-[0_0_18px_rgba(0,229,255,0.15)]">
+              <Rocket size={18} />
+            </span>
+            <div>
+              <div className="font-['Orbitron'] text-lg font-bold tracking-[0.22em]">StellarFund</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-[var(--text-secondary)]">Crowdfunding command deck</div>
+            </div>
+          </Link>
+
+          <nav className="hidden items-center gap-2 md:flex">
+            {links.map(([label, to]) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) => `relative rounded-full px-4 py-2 text-sm uppercase tracking-[0.18em] transition ${isActive ? 'text-[var(--accent-cyan)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+              >
+                {label}
+                <span className="absolute inset-x-3 -bottom-0.5 h-px bg-[var(--accent-cyan)]" style={{ opacity: 0.0 }} />
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <WalletButton wallet={wallet} />
+            <button aria-label="Open navigation menu" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(0,229,255,0.2)] bg-[rgba(7,13,20,0.8)] text-[var(--text-primary)] md:hidden" onClick={() => setOpen(true)}>
+              <Menu size={18} />
+            </button>
+          </div>
+        </div>
+      </header>
+      <div className={`fixed inset-0 z-50 bg-black/60 transition ${open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`} onClick={() => setOpen(false)} />
+      <aside className={`fixed left-0 top-0 z-[60] h-full w-[82vw] max-w-sm border-r border-[rgba(0,229,255,0.16)] bg-[rgba(2,4,8,0.96)] backdrop-blur-xl transition-transform duration-300 md:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex items-center justify-between border-b border-white/10 p-5">
+          <div className="font-['Orbitron'] text-sm tracking-[0.3em] text-[var(--accent-cyan)]">NAV MENU</div>
+          <button aria-label="Close navigation menu" onClick={() => setOpen(false)}>
+            <Menu size={18} />
+          </button>
+        </div>
+        <nav className="flex flex-col gap-2 p-4">
+          {links.map(([label, to]) => (
+            <NavLink key={to} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `rounded-2xl px-4 py-4 text-base uppercase tracking-[0.22em] ${isActive ? 'bg-white/5 text-[var(--accent-cyan)]' : 'text-[var(--text-primary)]'}`}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
+  );
+}
