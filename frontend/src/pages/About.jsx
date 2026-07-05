@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
-import { CONTRACT_ID, HORIZON, SOROBAN_RPC, NETWORK_PASSPHRASE } from '@/lib/constants';
+import { CONTRACT_ACTIVE, CONTRACT_ID, CONTRACT_ID_DISPLAY, HORIZON, NETWORK_PASSPHRASE, SOROBAN_RPC } from '@/lib/constants';
 
 const techStack = ['React 19', 'Vite 6', 'Tailwind 4', 'Framer Motion 12', 'Soroban SDK 21', 'Stellar SDK 13', 'React Query 5', 'StellarWalletsKit'];
 const errors = [
@@ -15,11 +15,12 @@ export default function About() {
       <GlassCard>
         <h1 className="font-['Orbitron'] text-3xl tracking-[0.18em]">Project</h1>
         <p className="mt-4 text-[var(--text-secondary)]">StellarFund is a Yellow Belt crowdfunding dApp that uses a Soroban contract for campaign state, donations, and live event feeds on Stellar Testnet.</p>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 font-['IBM_Plex_Mono'] text-sm break-all">{CONTRACT_ID}</div>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 font-['IBM_Plex_Mono'] text-sm break-all">{CONTRACT_ID_DISPLAY}</div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a href={`https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[rgba(0,229,255,0.2)] px-4 py-2">View on Stellar Expert <ExternalLink size={14} /></a>
+          <a href={CONTRACT_ACTIVE ? `https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}` : undefined} target={CONTRACT_ACTIVE ? '_blank' : undefined} rel={CONTRACT_ACTIVE ? 'noreferrer' : undefined} className="inline-flex items-center gap-2 rounded-full border border-[rgba(0,229,255,0.2)] px-4 py-2 disabled:pointer-events-none disabled:opacity-60" aria-disabled={!CONTRACT_ACTIVE}>View on Stellar Expert <ExternalLink size={14} /></a>
           <a href="https://github.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[rgba(0,229,255,0.2)] px-4 py-2">View Source on GitHub <ExternalLink size={14} /></a>
         </div>
+        {!CONTRACT_ACTIVE ? <p className="mt-3 text-sm text-[var(--text-secondary)]">No contract ID is configured yet. Create frontend/.env and set VITE_CONTRACT_ID to the deployed Testnet contract address.</p> : null}
       </GlassCard>
       <div className="space-y-6">
         <GlassCard>

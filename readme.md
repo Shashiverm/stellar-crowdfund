@@ -62,6 +62,8 @@ VITE_SOROBAN_RPC=https://soroban-testnet.stellar.org
 VITE_HORIZON=https://horizon-testnet.stellar.org
 ```
 
+After you deploy the contract, copy the contract ID from the deploy output and paste it into `VITE_CONTRACT_ID`. The frontend uses demo data until that value is set.
+
 ## Error Handling
 
 | Error type | Meaning |

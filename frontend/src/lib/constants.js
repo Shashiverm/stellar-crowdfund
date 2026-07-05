@@ -1,11 +1,12 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 
-export const CONTRACT_ID = import.meta.env.VITE_CONTRACT_ID || 'CDEMO_STELLARFUND_CONTRACT_ID';
+export const CONTRACT_ID = (import.meta.env.VITE_CONTRACT_ID || '').trim();
 export const NETWORK_PASSPHRASE = StellarSdk.Networks?.TESTNET || 'Test SDF Network ; September 2015';
 export const SOROBAN_RPC = import.meta.env.VITE_SOROBAN_RPC || 'https://soroban-testnet.stellar.org';
 export const HORIZON = import.meta.env.VITE_HORIZON || 'https://horizon-testnet.stellar.org';
 export const DEMO_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
-export const CONTRACT_ACTIVE = Boolean(CONTRACT_ID && !CONTRACT_ID.startsWith('CDEMO'));
+export const CONTRACT_ACTIVE = Boolean(CONTRACT_ID) && !CONTRACT_ID.startsWith('CDEMO');
+export const CONTRACT_ID_DISPLAY = CONTRACT_ACTIVE ? CONTRACT_ID : 'Set VITE_CONTRACT_ID in frontend/.env';
 
 export const DEMO_CAMPAIGN = {
   title: 'Deep Space Habitat Relay',
