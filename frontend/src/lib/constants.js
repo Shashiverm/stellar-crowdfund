@@ -1,12 +1,22 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 
-export const CONTRACT_ID = (import.meta.env.VITE_CONTRACT_ID || '').trim();
+export function getActiveContractId() {
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('stellar_custom_contract_id');
+    if (custom && custom.trim()) return custom.trim();
+  }
+  return (import.meta.env.VITE_CONTRACT_ID || '').trim();
+}
+
+export const CONTRACT_ID = getActiveContractId();
 export const NETWORK_PASSPHRASE = StellarSdk.Networks?.TESTNET || 'Test SDF Network ; September 2015';
 export const SOROBAN_RPC = import.meta.env.VITE_SOROBAN_RPC || 'https://soroban-testnet.stellar.org';
 export const HORIZON = import.meta.env.VITE_HORIZON || 'https://horizon-testnet.stellar.org';
 export const DEMO_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
-export const CONTRACT_ACTIVE = Boolean(CONTRACT_ID) && !CONTRACT_ID.startsWith('CDEMO');
-export const CONTRACT_ID_DISPLAY = CONTRACT_ACTIVE ? CONTRACT_ID : 'Set VITE_CONTRACT_ID in frontend/.env';
+
+export const isContractActive = (id = getActiveContractId()) => Boolean(id) && id.length > 20 && !id.startsWith('CDEMO');
+export const CONTRACT_ACTIVE = isContractActive();
+export const CONTRACT_ID_DISPLAY = CONTRACT_ACTIVE ? getActiveContractId() : 'Set VITE_CONTRACT_ID in .env or UI';
 
 export const DEMO_CAMPAIGN = {
   title: 'Deep Space Habitat Relay',
@@ -20,4 +30,4 @@ export const DEMO_DONATIONS = [
   { donor: 'GCVB4B6L5D4S5F6G7H8J9K0L1M2N3B4V5C6X7Z8A9S0D1F2G3H4J5K6', amount: 50000000, timestamp: Date.now() - 65000, txHash: 'demo-hash-01' },
   { donor: 'GBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCK', amount: 100000000, timestamp: Date.now() - 240000, txHash: 'demo-hash-02' },
   { donor: 'GCCCCCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCVCC', amount: 12500000, timestamp: Date.now() - 510000, txHash: 'demo-hash-03' },
-];
+];

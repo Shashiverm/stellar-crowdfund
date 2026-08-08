@@ -33,6 +33,13 @@ pub struct StellarFundContract;
 impl StellarFundContract {
     pub fn init(env: Env, owner: Address, title: String, goal: i128) {
         owner.require_auth();
+        if goal <= 0 {
+            panic!("Goal must be positive");
+        }
+        if env.storage().instance().has(&DataKey::Campaign) {
+            panic!("Already initialized");
+        }
+
         let campaign = Campaign { title, goal, raised: 0, owner, donor_count: 0 };
         env.storage().instance().set(&DataKey::Campaign, &campaign);
         let donations: Vec<Donation> = Vec::new(&env);
@@ -41,15 +48,28 @@ impl StellarFundContract {
 
     pub fn donate(env: Env, donor: Address, amount: i128) {
         donor.require_auth();
+        if amount <= 0 {
+            panic!("Donation amount must be positive");
+        }
+
         let mut campaign: Campaign = env.storage().instance().get(&DataKey::Campaign).expect("campaign not initialized");
         let mut donations: Vec<Donation> = env.storage().instance().get(&DataKey::Donations).unwrap_or(Vec::new(&env));
-        let donation = Donation { donor: donor.clone(), amount, timestamp: env.ledger().timestamp() };
-        campaign.raised += amount;
+        
+        let timestamp = env.ledger().timestamp();
+        let donation = Donation { donor: donor.clone(), amount, timestamp };
+        
+        campaign.raised = campaign.raised.checked_add(amount).expect("overflow");
         campaign.donor_count += 1;
         donations.push_back(donation);
+        
         env.storage().instance().set(&DataKey::Campaign, &campaign);
         env.storage().instance().set(&DataKey::Donations, &donations);
+        
         env.events().publish((symbol_short!("donated"), donor), amount);
+    }
+
+    pub fn is_initialized(env: Env) -> bool {
+        env.storage().instance().has(&DataKey::Campaign)
     }
 
     pub fn get_campaign(env: Env) -> Campaign {
@@ -64,4 +84,4 @@ impl StellarFundContract {
         let campaign: Campaign = env.storage().instance().get(&DataKey::Campaign).expect("campaign not initialized");
         campaign.donor_count
     }
-}
+}

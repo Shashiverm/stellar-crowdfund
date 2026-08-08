@@ -16,7 +16,7 @@ export default function WalletButton({ wallet }) {
         <button aria-label="Connect wallet" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[rgba(0,229,255,0.2)] bg-[rgba(7,13,20,0.8)] text-[var(--accent-cyan)] md:hidden" onClick={() => setOpen(true)}>
           <Wallet size={18} />
         </button>
-        <WalletModal open={open} wallets={wallet.wallets} onSelect={async (walletId) => { await wallet.connect(walletId); setOpen(false); }} onClose={() => setOpen(false)} />
+        <WalletModal open={open} wallets={wallet.wallets} connecting={wallet.connecting} onSelect={async (walletId) => { await wallet.connect(walletId); setOpen(false); }} onClose={() => setOpen(false)} />
       </>
     );
   }
