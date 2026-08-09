@@ -86,7 +86,8 @@ export async function getCampaign() {
     if (!result || StellarSdk.rpc?.Api?.isSimulationError(result)) {
       throw new Error('Simulation failed');
     }
-    const native = StellarSdk.scValToNative ? StellarSdk.scValToNative(result?.retval) : result?.retval;
+    const retval = result?.result?.retval || result?.retval;
+    const native = StellarSdk.scValToNative && retval ? StellarSdk.scValToNative(retval) : retval;
     if (!native) throw new Error('No campaign data');
     return {
       title: native.title || native[0] || 'Campaign',
@@ -110,7 +111,8 @@ export async function getDonations() {
     if (!result || StellarSdk.rpc?.Api?.isSimulationError(result)) {
       return [];
     }
-    const native = StellarSdk.scValToNative ? StellarSdk.scValToNative(result?.retval) : result?.retval;
+    const retval = result?.result?.retval || result?.retval;
+    const native = StellarSdk.scValToNative && retval ? StellarSdk.scValToNative(retval) : retval;
     if (!Array.isArray(native)) return [];
     return native.map((entry, index) => parseDonorEntry(entry, index));
   } catch (err) {

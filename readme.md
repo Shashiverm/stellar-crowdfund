@@ -57,7 +57,7 @@ Set these values after deploying the contract to Testnet:
 The frontend reads these from `frontend/.env`:
 
 ```bash
-VITE_CONTRACT_ID=CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+VITE_CONTRACT_ID=CBJ3A3Z3INDIAHRBVQUEFDODP4MI6U3EOANG2DRRCT5JSOAKYBQ34MS5
 VITE_SOROBAN_RPC=https://soroban-testnet.stellar.org
 VITE_HORIZON=https://horizon-testnet.stellar.org
 ```
