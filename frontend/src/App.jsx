@@ -9,7 +9,6 @@ import { useWallet } from '@/hooks/useWallet';
 const Home = React.lazy(() => import('@/pages/Home'));
 const Donate = React.lazy(() => import('@/pages/Donate'));
 const Activity = React.lazy(() => import('@/pages/Activity'));
-const About = React.lazy(() => import('@/pages/About'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 function AppShell() {
@@ -53,7 +52,6 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'donate', element: <Donate /> },
       { path: 'activity', element: <Activity /> },
-      { path: 'about', element: <About /> },
       { path: '*', element: <NotFound /> },
     ],
   },

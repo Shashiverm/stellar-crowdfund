@@ -37,7 +37,7 @@ export default function DonorFeed({ events = [] }) {
 
             <div className="mt-2 flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
               <span>{relativeTime(event.timestamp)}</span>
-              {event.txHash && !event.txHash.startsWith('demo-') ? (
+              {event.txHash ? (
                 <a
                   href={`https://stellar.expert/explorer/testnet/tx/${event.txHash}`}
                   target="_blank"

@@ -31,7 +31,7 @@ export default function TxStatus({ state, onRetry }) {
   }
 
   if (state.status === 'success') {
-    const isRealHash = state.hash && !state.hash.startsWith('demo-');
+    const isRealHash = !!state.hash;
     return (
       <div className="relative overflow-hidden rounded-2xl border border-[rgba(57,255,20,0.3)] bg-[rgba(57,255,20,0.08)] p-5 shadow-[0_0_30px_rgba(57,255,20,0.15)]">
         <div className="absolute right-2 top-2"><ParticleBurst /></div>

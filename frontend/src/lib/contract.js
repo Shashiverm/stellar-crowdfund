@@ -1,5 +1,6 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
-import { DEMO_CAMPAIGN, DEMO_DONATIONS, getActiveContractId, HORIZON, isContractActive, NETWORK_PASSPHRASE, SOROBAN_RPC } from './constants';
+import { getActiveContractId, HORIZON, isContractActive, NETWORK_PASSPHRASE, SOROBAN_RPC } from './constants';
+
 
 function createRpcClient() {
   try {
@@ -39,17 +40,17 @@ function toStroops(xlm) {
 function parseDonorEntry(entry, index) {
   if (!entry) {
     return {
-      donor: 'GDEMO...',
+      donor: 'Unknown',
       amount: 0,
       timestamp: Date.now() - index * 60000,
-      txHash: `demo-${index}`,
+      txHash: `tx-${index}`,
     };
   }
   return {
-    donor: entry.donor || entry[0] || 'GDEMO...',
+    donor: entry.donor || entry[0] || 'Unknown',
     amount: entry.amount !== undefined ? toXlm(entry.amount) : (entry[1] ? toXlm(entry[1]) : 0),
     timestamp: Number(entry.timestamp || entry[2] || (Date.now() - index * 60000)),
-    txHash: entry.txHash || entry.hash || `demo-${index}`,
+    txHash: entry.txHash || entry.hash || `tx-${index}`,
   };
 }
 
@@ -78,48 +79,50 @@ async function simulate(method, args = []) {
 export async function getCampaign() {
   const contractId = getActiveContractId();
   if (!isContractActive(contractId)) {
-    return { ...DEMO_CAMPAIGN, goal: toXlm(DEMO_CAMPAIGN.goal), raised: toXlm(DEMO_CAMPAIGN.raised), isDemo: true };
+    throw new Error('Contract is not active');
   }
   try {
     const result = await simulate('get_campaign');
     if (!result || StellarSdk.rpc?.Api?.isSimulationError(result)) {
-      return { ...DEMO_CAMPAIGN, goal: toXlm(DEMO_CAMPAIGN.goal), raised: toXlm(DEMO_CAMPAIGN.raised), isDemo: true };
+      throw new Error('Simulation failed');
     }
     const native = StellarSdk.scValToNative ? StellarSdk.scValToNative(result?.retval) : result?.retval;
-    if (!native) return { ...DEMO_CAMPAIGN, goal: toXlm(DEMO_CAMPAIGN.goal), raised: toXlm(DEMO_CAMPAIGN.raised), isDemo: true };
+    if (!native) throw new Error('No campaign data');
     return {
-      title: native.title || native[0] || DEMO_CAMPAIGN.title,
-      goal: toXlm(native.goal !== undefined ? native.goal : native[1] || DEMO_CAMPAIGN.goal),
-      raised: toXlm(native.raised !== undefined ? native.raised : native[2] || DEMO_CAMPAIGN.raised),
-      donor_count: Number(native.donor_count !== undefined ? native.donor_count : native[4] || DEMO_CAMPAIGN.donor_count),
-      owner: native.owner || native[3] || DEMO_CAMPAIGN.owner,
+      title: native.title || native[0] || 'Campaign',
+      goal: toXlm(native.goal !== undefined ? native.goal : native[1] || 0),
+      raised: toXlm(native.raised !== undefined ? native.raised : native[2] || 0),
+      donor_count: Number(native.donor_count !== undefined ? native.donor_count : native[4] || 0),
+      owner: native.owner || native[3] || 'Unknown',
       isDemo: false,
     };
-  } catch {
-    return { ...DEMO_CAMPAIGN, goal: toXlm(DEMO_CAMPAIGN.goal), raised: toXlm(DEMO_CAMPAIGN.raised), isDemo: true };
+  } catch (err) {
+    console.error('getCampaign error:', err);
+    throw err;
   }
 }
 
 export async function getDonations() {
   const contractId = getActiveContractId();
-  if (!isContractActive(contractId)) return DEMO_DONATIONS.map(parseDonorEntry);
+  if (!isContractActive(contractId)) return [];
   try {
     const result = await simulate('get_donations');
     if (!result || StellarSdk.rpc?.Api?.isSimulationError(result)) {
-      return DEMO_DONATIONS.map(parseDonorEntry);
+      return [];
     }
     const native = StellarSdk.scValToNative ? StellarSdk.scValToNative(result?.retval) : result?.retval;
-    if (!Array.isArray(native)) return DEMO_DONATIONS.map(parseDonorEntry);
+    if (!Array.isArray(native)) return [];
     return native.map((entry, index) => parseDonorEntry(entry, index));
-  } catch {
-    return DEMO_DONATIONS.map(parseDonorEntry);
+  } catch (err) {
+    console.error('getDonations error:', err);
+    return [];
   }
 }
 
 export async function getContractEvents() {
   const contractId = getActiveContractId();
   if (!isContractActive(contractId) || !rpc) {
-    return DEMO_DONATIONS.map((donation, idx) => ({ ...donation, amount: toXlm(donation.amount), txHash: donation.txHash || `demo-tx-${idx}` }));
+    return [];
   }
   try {
     const latestLedger = await rpc.getLatestLedger();
@@ -128,7 +131,7 @@ export async function getContractEvents() {
       filters: [{ contractIds: [contractId] }],
     });
     if (!events?.events?.length) {
-      return DEMO_DONATIONS.map((donation, idx) => ({ ...donation, amount: toXlm(donation.amount), txHash: donation.txHash || `demo-tx-${idx}` }));
+      return [];
     }
     return events.events.map((event, index) => {
       const valueNative = StellarSdk.scValToNative ? StellarSdk.scValToNative(event.value) : event.value;
@@ -142,15 +145,14 @@ export async function getContractEvents() {
     });
   } catch (err) {
     console.warn('Failed to fetch events from RPC:', err);
-    return DEMO_DONATIONS.map((donation, idx) => ({ ...donation, amount: toXlm(donation.amount), txHash: donation.txHash || `demo-tx-${idx}` }));
+    return [];
   }
 }
 
 export async function donateToCampaign({ publicKey, amount, signTransaction }) {
   const contractId = getActiveContractId();
   if (!isContractActive(contractId) || !rpc) {
-    await new Promise((res) => setTimeout(res, 1200));
-    return { hash: `demo-tx-${Date.now()}`, success: true, isDemo: true };
+    throw new Error('Contract is not active or RPC is down');
   }
   const account = await rpc.getAccount(publicKey);
   const contract = new StellarSdk.Contract(contractId);

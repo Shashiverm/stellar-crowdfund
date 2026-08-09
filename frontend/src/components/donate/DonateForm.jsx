@@ -7,7 +7,6 @@ import { getActiveContractId, isContractActive } from '@/lib/constants';
 export default function DonateForm({ onSubmit, loading = false }) {
   const [amount, setAmount] = useState('10');
   const activeId = getActiveContractId();
-  const isActive = isContractActive(activeId);
 
   const numAmount = Number(amount) || 0;
 
@@ -35,7 +34,7 @@ export default function DonateForm({ onSubmit, loading = false }) {
         <div className="flex items-center justify-between text-[var(--text-secondary)]">
           <span className="flex items-center gap-1.5"><Cpu size={13} /> Target Smart Contract</span>
           <span className="text-[var(--text-primary)] font-medium">
-            {isActive ? `${activeId.slice(0, 6)}...${activeId.slice(-6)}` : 'Demo Contract'}
+            {`${activeId.slice(0, 6)}...${activeId.slice(-6)}`}
           </span>
         </div>
 

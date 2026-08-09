@@ -105,30 +105,6 @@ export default function WalletModal({
               </button>
             );
           })}
-
-          {/* Demo Fallback Option */}
-          <button
-            disabled={connecting}
-            onClick={() => onSelect('mock')}
-            className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/5 p-3 text-left transition-all duration-200 hover:border-white/40 hover:bg-white/10 disabled:opacity-50"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-xs font-bold text-[var(--text-secondary)]">
-                DM
-              </div>
-              <div>
-                <div className="font-['Orbitron'] text-xs font-medium text-[var(--text-secondary)]">
-                  Demo Simulation Wallet
-                </div>
-                <div className="text-[9px] text-[var(--text-secondary)]">
-                  Use mock key for testing without extension
-                </div>
-              </div>
-            </div>
-            <span className="text-[9px] uppercase tracking-wider text-[var(--text-secondary)] group-hover:text-white">
-              Demo
-            </span>
-          </button>
         </div>
 
         {/* Security Footer Note */}

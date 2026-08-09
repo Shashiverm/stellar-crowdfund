@@ -2,24 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Cpu, ExternalLink, Menu, Rocket, ShieldCheck } from 'lucide-react';
 import WalletButton from '@/components/wallet/WalletButton';
-import ContractModal from './ContractModal';
 import { checkRpcPing } from '@/lib/contract';
-import { getActiveContractId, isContractActive } from '@/lib/constants';
+import { getActiveContractId } from '@/lib/constants';
 
 const links = [
   ['Home', '/'],
   ['Donate', '/donate'],
   ['Activity', '/activity'],
-  ['About', '/about'],
 ];
 
 export default function Navbar({ wallet }) {
   const [open, setOpen] = useState(false);
-  const [contractModalOpen, setContractModalOpen] = useState(false);
   const [rpcOnline, setRpcOnline] = useState(true);
 
   const activeId = getActiveContractId();
-  const isActive = isContractActive(activeId);
 
   useEffect(() => {
     let mounted = true;
@@ -78,20 +74,7 @@ export default function Navbar({ wallet }) {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Contract ID Trigger Button */}
-            <button
-              onClick={() => setContractModalOpen(true)}
-              className="hidden items-center gap-2 rounded-full border border-[rgba(0,229,255,0.2)] bg-black/40 px-3.5 py-1.5 text-xs transition hover:border-[var(--accent-cyan)] hover:bg-[rgba(0,229,255,0.05)] lg:flex"
-              title="Inspect or set VITE_CONTRACT_ID"
-            >
-              <Cpu size={14} className={isActive ? 'text-[var(--accent-cyan)]' : 'text-amber-400'} />
-              <span className="font-['IBM_Plex_Mono'] text-[11px]">
-                {isActive ? `${activeId.slice(0, 5)}...${activeId.slice(-4)}` : 'Demo Contract'}
-              </span>
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] uppercase font-bold tracking-wider ${isActive ? 'bg-[var(--accent-aurora)]/20 text-[var(--accent-aurora)]' : 'bg-amber-400/20 text-amber-300'}`}>
-                {isActive ? 'Live' : 'Demo'}
-              </span>
-            </button>
+
 
             <WalletButton wallet={wallet} />
 
@@ -106,7 +89,6 @@ export default function Navbar({ wallet }) {
         </div>
       </header>
 
-      <ContractModal isOpen={contractModalOpen} onClose={() => setContractModalOpen(false)} />
 
       <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition ${open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`} onClick={() => setOpen(false)} />
       <aside className={`fixed left-0 top-0 z-[60] h-full w-[82vw] max-w-sm border-r border-[rgba(0,229,255,0.16)] bg-[rgba(2,4,8,0.98)] backdrop-blur-2xl transition-transform duration-300 md:hidden ${open ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -127,13 +109,7 @@ export default function Navbar({ wallet }) {
               {label}
             </NavLink>
           ))}
-          <button
-            onClick={() => { setOpen(false); setContractModalOpen(true); }}
-            className="mt-4 flex items-center justify-between rounded-2xl border border-[rgba(0,229,255,0.2)] bg-black/40 px-4 py-3 text-xs tracking-widest text-[var(--accent-cyan)]"
-          >
-            <span>Contract Settings</span>
-            <Cpu size={14} />
-          </button>
+
         </nav>
       </aside>
     </>

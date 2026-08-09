@@ -23,7 +23,7 @@ export function useDonate(wallet) {
       setState({ status: 'confirming', hash: result?.hash || '', errorType: '', message: '' });
       await queryClient.invalidateQueries({ queryKey: ['campaign'] });
       await queryClient.invalidateQueries({ queryKey: ['events'] });
-      setState({ status: 'success', hash: result?.hash || `demo-${Date.now()}`, errorType: '', message: '' });
+      setState({ status: 'success', hash: result?.hash || `tx-${Date.now()}`, errorType: '', message: '' });
       toast.success('Donation transmitted to the mission ledger.');
       return result;
     } catch (cause) {
