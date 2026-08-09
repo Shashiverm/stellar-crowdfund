@@ -128,14 +128,38 @@ stellar contract invoke --network testnet --id <CONTRACT_ID> -- init --owner <PU
 
 ## Screenshots
 
-### Dashboard
-![Dashboard](./screenshot/dashboard.png)
-
-### Wallet Connect Error State
-![Wallet Connect Error](./screenshot/connect_wallet_er.png)
-
-### Donation Failed Error State
-![Donation Failed](./screenshot/donation_failed_error.png)
+<table align="center">
+  <tr>
+    <td align="center">
+      <strong>Dashboard</strong><br/>
+      <img src="./screenshot/dashboard.png" alt="Dashboard" />
+    </td>
+    <td align="center">
+      <strong>Successful Build Contract</strong><br/>
+      <img src="./screenshot/succesfull_build_contract.png" alt="Successful Build Contract" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Transaction Success</strong><br/>
+      <img src="./screenshot/transaction_success.png" alt="Transaction Success" />
+    </td>
+    <td align="center">
+      <strong>Ledger View</strong><br/>
+      <img src="./screenshot/ledger.png" alt="Ledger View" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Wallet Connect Error</strong><br/>
+      <img src="./screenshot/connect_wallet_er.png" alt="Wallet Connect Error" />
+    </td>
+    <td align="center">
+      <strong>Donation Failed Error</strong><br/>
+      <img src="./screenshot/donation_failed_error.png" alt="Donation Failed Error" />
+    </td>
+  </tr>
+</table>
 
 ## Reviewer Notes
 

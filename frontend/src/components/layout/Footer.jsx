@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="flex flex-wrap items-center gap-4 text-xs uppercase tracking-[0.24em]">
           <a href={HORIZON} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[var(--text-primary)]">Stellar Testnet <ExternalLink size={12} /></a>
           <a href="https://stellar.expert/explorer/testnet" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[var(--text-primary)]">Stellar Expert <ExternalLink size={12} /></a>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[var(--text-primary)]">GitHub <ExternalLink size={12} /></a>
+          <a href="https://github.com/Shashiverm/stellar-crowdfund" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-[var(--text-primary)]">GitHub <ExternalLink size={12} /></a>
         </div>
       </div>
     </footer>
