@@ -14,3 +14,4 @@ soroban-sdk = { version = "21.0.0", features = ["testutils"] }
 
 [profile.release]
 overflow-checks = true
+codegen-units = 1
