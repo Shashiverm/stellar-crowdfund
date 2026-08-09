@@ -1,7 +1,15 @@
 import { createPortal } from 'react-dom';
-import { ShieldCheck, Wallet, X } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Wallet, X, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-export default function WalletModal({ open, wallets = [], onSelect, onClose, connecting }) {
+export default function WalletModal({
+  open,
+  wallets = [],
+  onSelect,
+  onClose,
+  connecting,
+  error,
+  isFreighterInstalled,
+}) {
   if (!open) return null;
 
   return createPortal(
@@ -26,7 +34,7 @@ export default function WalletModal({ open, wallets = [], onSelect, onClose, con
             </span>
             <div>
               <h3 className="font-['Orbitron'] text-lg font-bold tracking-[0.16em] text-[var(--text-primary)]">Connect Wallet</h3>
-              <p className="text-xs text-[var(--text-secondary)]">Select a Stellar module to proceed</p>
+              <p className="text-xs text-[var(--text-secondary)]">Select a Stellar wallet module</p>
             </div>
           </div>
           <button 
@@ -38,36 +46,89 @@ export default function WalletModal({ open, wallets = [], onSelect, onClose, con
           </button>
         </div>
 
+        {/* Error Notification Banner */}
+        {error && (
+          <div className="relative mb-4 rounded-2xl border border-[rgba(255,107,53,0.3)] bg-[rgba(255,107,53,0.12)] p-3 text-xs text-[var(--accent-plasma)] flex items-start gap-2.5">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[var(--accent-plasma)]" />
+            <div className="flex-1">
+              <p className="font-semibold">{error.message || String(error)}</p>
+              {error.message?.includes('not installed') && (
+                <a
+                  href="https://www.freighter.app/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 font-bold underline hover:text-white"
+                >
+                  Get Freighter Wallet <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Wallet Options */}
         <div className="relative grid gap-3">
-          {wallets.map((w) => (
-            <button
-              key={w.id}
-              disabled={connecting}
-              onClick={() => onSelect(w.id)}
-              className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all duration-200 hover:border-[var(--accent-cyan)] hover:bg-[rgba(0,229,255,0.08)] hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] disabled:opacity-50"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/40 font-['Orbitron'] text-xs font-bold text-[var(--accent-cyan)] group-hover:border-[var(--accent-cyan)]">
-                  {w.name.slice(0, 2).toUpperCase()}
+          {wallets.map((w) => {
+            const isFreighter = w.id === 'freighter';
+            return (
+              <button
+                key={w.id}
+                disabled={connecting}
+                onClick={() => onSelect(w.id)}
+                className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition-all duration-200 hover:border-[var(--accent-cyan)] hover:bg-[rgba(0,229,255,0.08)] hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/40 font-['Orbitron'] text-xs font-bold text-[var(--accent-cyan)] group-hover:border-[var(--accent-cyan)]">
+                    {w.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-['Orbitron'] text-sm font-semibold tracking-wider text-[var(--text-primary)] group-hover:text-[var(--accent-cyan)]">
+                        {w.name}
+                      </span>
+                      {isFreighter && isFreighterInstalled && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-[var(--accent-aurora)]/40 bg-[var(--accent-aurora)]/15 px-2 py-0.5 text-[9px] font-bold text-[var(--accent-aurora)]">
+                          <CheckCircle2 size={10} /> Detected
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+                      {isFreighter ? 'Official Stellar Wallet' : `${w.id} wallet`}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-['Orbitron'] text-sm font-semibold tracking-wider text-[var(--text-primary)] group-hover:text-[var(--accent-cyan)]">
-                    {w.name}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--text-secondary)]">
-                    {w.id} wallet
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-[var(--accent-cyan)]/30 bg-[var(--accent-cyan)]/10 px-2.5 py-1 text-[9px] uppercase font-bold tracking-widest text-[var(--accent-cyan)] opacity-90 group-hover:opacity-100">
+                    {connecting ? 'Connecting...' : 'Connect'}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+
+          {/* Demo Fallback Option */}
+          <button
+            disabled={connecting}
+            onClick={() => onSelect('mock')}
+            className="group relative flex items-center justify-between overflow-hidden rounded-2xl border border-dashed border-white/20 bg-white/5 p-3 text-left transition-all duration-200 hover:border-white/40 hover:bg-white/10 disabled:opacity-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-xs font-bold text-[var(--text-secondary)]">
+                DM
+              </div>
+              <div>
+                <div className="font-['Orbitron'] text-xs font-medium text-[var(--text-secondary)]">
+                  Demo Simulation Wallet
+                </div>
+                <div className="text-[9px] text-[var(--text-secondary)]">
+                  Use mock key for testing without extension
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border border-[var(--accent-cyan)]/30 bg-[var(--accent-cyan)]/10 px-2 py-0.5 text-[9px] uppercase font-bold tracking-widest text-[var(--accent-cyan)] opacity-0 transition-opacity group-hover:opacity-100">
-                  Select
-                </span>
-                <span className="h-2 w-2 rounded-full bg-[var(--accent-cyan)] shadow-[0_0_8px_var(--accent-cyan)] opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
-            </button>
-          ))}
+            </div>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--text-secondary)] group-hover:text-white">
+              Demo
+            </span>
+          </button>
         </div>
 
         {/* Security Footer Note */}

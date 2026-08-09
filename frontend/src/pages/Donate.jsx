@@ -44,9 +44,15 @@ export default function Donate() {
           open={modalOpen} 
           wallets={wallet.wallets} 
           connecting={wallet.connecting} 
+          error={wallet.error}
+          isFreighterInstalled={wallet.isFreighterInstalled}
           onSelect={async (walletId) => { 
-            await wallet.connect(walletId); 
-            setModalOpen(false); 
+            try {
+              await wallet.connect(walletId); 
+              setModalOpen(false); 
+            } catch {
+              /* keep modal open so user sees error banner */
+            }
           }} 
           onClose={() => setModalOpen(false)} 
         />

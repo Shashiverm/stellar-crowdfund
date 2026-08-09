@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import {
+  isConnected,
+  requestAccess,
+  getAddress,
+  signTransaction as freighterSignTx,
+  isAllowed,
+} from '@stellar/freighter-api';
 import { ErrorType, classifyError } from '@/lib/errors';
 import { NETWORK_PASSPHRASE } from '@/lib/constants';
 
 const defaultWallets = [
-  { id: 'freighter', name: 'Freighter' },
+  { id: 'freighter', name: 'Freighter', recommended: true },
   { id: 'xbull', name: 'xBull' },
   { id: 'lobstr', name: 'Lobstr' },
 ];
@@ -13,60 +20,139 @@ export function useWallet() {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
-  const [wallets, setWallets] = useState(defaultWallets);
+  const [wallets] = useState(defaultWallets);
+  const [isFreighterInstalled, setIsFreighterInstalled] = useState(false);
   const [kit, setKit] = useState(null);
 
+  // Check if Freighter is installed and auto-reconnect if previously authorized
   useEffect(() => {
     let mounted = true;
+
+    async function checkFreighterState() {
+      try {
+        const connRes = await isConnected();
+        const installed = typeof connRes === 'boolean' ? connRes : Boolean(connRes?.isConnected);
+        if (mounted) {
+          setIsFreighterInstalled(installed);
+        }
+
+        const savedWallet = localStorage.getItem('stellarfund_wallet_connected');
+        if (installed && savedWallet === 'freighter') {
+          const allowedRes = await isAllowed();
+          const allowed = typeof allowedRes === 'boolean' ? allowedRes : Boolean(allowedRes?.isAllowed);
+          if (allowed) {
+            const addrRes = await getAddress();
+            const address = typeof addrRes === 'string' ? addrRes : addrRes?.address;
+            if (address && mounted) {
+              setPublicKey(address);
+            }
+          }
+        } else if (savedWallet === 'mock') {
+          if (mounted) setPublicKey('GDMOCKWALLETADDRESS0000000000000000000000000000000000');
+        }
+      } catch (err) {
+        console.warn('Freighter status check failed:', err);
+      }
+    }
+
+    checkFreighterState();
+
     import('@creit.tech/stellar-wallets-kit')
       .then((module) => {
         if (!mounted) return;
         const api = module.default || module;
         setKit(api);
-        const listed = api?.wallets || api?.Wallets || defaultWallets;
-        setWallets(Array.isArray(listed) ? listed : defaultWallets);
       })
-      .catch(() => mounted && setKit(null));
+      .catch(() => {
+        if (mounted) setKit(null);
+      });
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  const connect = async (walletId) => {
+  const connect = async (walletId = 'freighter') => {
     setConnecting(true);
     setError(null);
+    setErrorType(null);
+
     try {
-      if (!kit) {
-        setPublicKey('GDMOCKWALLETADDRESS0000000000000000000000000000000000');
-        return;
-      }
-      if (walletId && kit.setWallet) {
-        await kit.setWallet(walletId);
-      } else if (kit.openModal) {
-        await kit.openModal();
-      }
+      if (walletId === 'freighter') {
+        const connRes = await isConnected();
+        const installed = typeof connRes === 'boolean' ? connRes : Boolean(connRes?.isConnected);
+        
+        if (!installed) {
+          const notFoundErr = new Error(
+            'Freighter extension is not installed in your browser. Please install Freighter from freighter.app to connect.'
+          );
+          setError(notFoundErr);
+          setErrorType(ErrorType.WALLET_NOT_FOUND);
+          throw notFoundErr;
+        }
 
-      let address = '';
-      if (typeof kit.getAddress === 'function') {
-        address = await kit.getAddress();
-      } else if (typeof kit.getPublicKey === 'function') {
-        address = await kit.getPublicKey();
-      } else {
-        address = kit.address || kit.publicKey || '';
-      }
+        // Prompt user for wallet authorization in Freighter extension
+        const accessRes = await requestAccess();
+        let address = '';
+        if (typeof accessRes === 'string') {
+          address = accessRes;
+        } else if (accessRes && accessRes.address) {
+          address = accessRes.address;
+        } else if (accessRes && accessRes.error) {
+          throw new Error(typeof accessRes.error === 'string' ? accessRes.error : 'Wallet connection request was rejected.');
+        }
 
-      if (!address) {
-        // Fallback for mock/simulation if kit fails to return address in test mode
-        setPublicKey('GDMOCKWALLETADDRESS0000000000000000000000000000000000');
-      } else {
+        if (!address) {
+          const addrRes = await getAddress();
+          address = typeof addrRes === 'string' ? addrRes : addrRes?.address;
+        }
+
+        if (!address) {
+          throw new Error('Could not retrieve public key address from Freighter.');
+        }
+
         setPublicKey(address);
+        localStorage.setItem('stellarfund_wallet_connected', 'freighter');
+        return address;
       }
+
+      if (walletId === 'mock') {
+        const mockAddr = 'GDMOCKWALLETADDRESS0000000000000000000000000000000000';
+        setPublicKey(mockAddr);
+        localStorage.setItem('stellarfund_wallet_connected', 'mock');
+        return mockAddr;
+      }
+
+      // Fallback via stellar-wallets-kit for other wallets (e.g. xBull, Lobstr)
+      if (kit) {
+        if (kit.setWallet) {
+          await kit.setWallet(walletId);
+        } else if (kit.openModal) {
+          await kit.openModal();
+        }
+
+        let address = '';
+        if (typeof kit.getAddress === 'function') {
+          address = await kit.getAddress();
+        } else if (typeof kit.getPublicKey === 'function') {
+          address = await kit.getPublicKey();
+        } else {
+          address = kit.address || kit.publicKey || '';
+        }
+
+        if (address) {
+          setPublicKey(address);
+          localStorage.setItem('stellarfund_wallet_connected', walletId);
+          return address;
+        }
+      }
+
+      throw new Error(`Wallet provider "${walletId}" is not currently supported.`);
     } catch (cause) {
       const type = classifyError(cause);
       setErrorType(type);
       setError(cause instanceof Error ? cause : new Error(String(cause)));
-      // Fallback for seamless demo mode if user wallet fails to connect
-      setPublicKey('GDMOCKWALLETADDRESS0000000000000000000000000000000000');
+      throw cause;
     } finally {
       setConnecting(false);
     }
@@ -76,18 +162,52 @@ export function useWallet() {
     setPublicKey('');
     setError(null);
     setErrorType(null);
+    localStorage.removeItem('stellarfund_wallet_connected');
     if (kit?.disconnect) {
-      try { await kit.disconnect(); } catch { /* noop */ }
+      try {
+        await kit.disconnect();
+      } catch {
+        /* noop */
+      }
     }
   };
 
   const signTransaction = async (xdr, options = {}) => {
     try {
-      if (!kit) return xdr;
-      const signer = kit.signTransaction || kit.signAndSendTransaction;
-      if (!signer) return xdr;
-      const result = await signer.call(kit, xdr, { networkPassphrase: NETWORK_PASSPHRASE, ...options });
-      return result?.signedTxXdr || result?.xdr || result?.signedXdr || result || xdr;
+      setError(null);
+      setErrorType(null);
+
+      const savedWallet = localStorage.getItem('stellarfund_wallet_connected');
+      if (savedWallet === 'freighter' || (publicKey && !publicKey.startsWith('GDMOCK'))) {
+        const res = await freighterSignTx(xdr, {
+          networkPassphrase: options.networkPassphrase || NETWORK_PASSPHRASE,
+          address: publicKey,
+        });
+
+        if (typeof res === 'string') return res;
+        if (res && res.error) {
+          throw new Error(typeof res.error === 'string' ? res.error : 'Transaction signing was rejected in Freighter.');
+        }
+        if (res && res.signedTxXdr) {
+          return res.signedTxXdr;
+        }
+        if (res && res.xdr) {
+          return res.xdr;
+        }
+      }
+
+      if (kit) {
+        const signer = kit.signTransaction || kit.signAndSendTransaction;
+        if (signer) {
+          const result = await signer.call(kit, xdr, {
+            networkPassphrase: NETWORK_PASSPHRASE,
+            ...options,
+          });
+          return result?.signedTxXdr || result?.xdr || result?.signedXdr || result || xdr;
+        }
+      }
+
+      return xdr;
     } catch (cause) {
       const type = classifyError(cause);
       setErrorType(type);
@@ -96,14 +216,18 @@ export function useWallet() {
     }
   };
 
-  return useMemo(() => ({
-    publicKey,
-    connecting,
-    error,
-    errorType,
-    wallets,
-    connect,
-    disconnect,
-    signTransaction,
-  }), [publicKey, connecting, error, errorType, wallets]);
+  return useMemo(
+    () => ({
+      publicKey,
+      connecting,
+      error,
+      errorType,
+      wallets,
+      isFreighterInstalled,
+      connect,
+      disconnect,
+      signTransaction,
+    }),
+    [publicKey, connecting, error, errorType, wallets, isFreighterInstalled]
+  );
 }
